@@ -1,14 +1,30 @@
+use std::env;
+use std::vec::Vec;
+
 use rand::distributions::{Distribution, Uniform};
 
 use point::Point2;
 
 mod point;
 
+const DEFAULT_N: i32 = 1000000;
 const LOWER_INCLUSIVE_BOUND: f64 = 0.0;
 const UPPER_INCLUSIVE_BOUND: f64 = 0.999999;
 
 fn main() {
-    println!("Hello, world!");
+    let args: Vec<String> = env::args().collect();
+    let mut n: i32 = DEFAULT_N;
+    if args.len() > 1 {
+        n = *&args[1].parse().unwrap_or(DEFAULT_N) as i32
+    }
+    println!("π ~= {}", estimate_pi(n));
+}
+
+fn estimate_pi(n: i32) -> f64 {
+    let points = generate_points(n);
+    let points_total = points.len() as f64;
+    let points_in_circle = count_points_in_circle(points) as f64;
+    return 4.0 * points_in_circle / points_total;
 }
 
 fn count_points_in_circle(points: Vec<Point2>) -> usize {
@@ -40,7 +56,7 @@ fn generate_random_number() -> f64 {
 
 #[cfg(test)]
 mod tests {
-    use crate::{count_points_in_circle, generate_point, generate_points, generate_random_number};
+    use crate::{count_points_in_circle, estimate_pi, generate_point, generate_points, generate_random_number};
     use crate::point::Point2;
 
     #[test]
@@ -66,7 +82,6 @@ mod tests {
         assert!(point.y >= 0.0 && point.y <= 1.0);
     }
 
-
     #[test]
     fn it_returns_list_of_points() {
         let points = generate_points(10);
@@ -87,5 +102,32 @@ mod tests {
         points.push(Point2 { x: 0.99, y: 0.99 });   // OUTER
         let points_in_circle = count_points_in_circle(points);
         assert_eq!(points_in_circle, 3);
+    }
+
+    #[test]
+    fn it_returns_an_estimation_of_pi_at_unit() {
+        let pi = estimate_pi(1000);
+        println!("π ~= {}", pi);
+
+        assert!(pi >= 3.0);
+        assert!(pi < 4.0);
+    }
+
+    #[test]
+    fn it_returns_an_estimation_of_pi_with_one_decimal() {
+        let pi = estimate_pi(10000);
+        println!("π ~= {}", pi);
+
+        assert!(pi >= 3.1);
+        assert!(pi < 3.2);
+    }
+
+    #[test]
+    fn it_returns_an_estimation_of_pi_with_two_decimal() {
+        let pi = estimate_pi(1000000);
+        println!("π ~= {}", pi);
+
+        assert!(pi >= 3.14);
+        assert!(pi < 3.15);
     }
 }
